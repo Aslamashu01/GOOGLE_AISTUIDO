@@ -1,0 +1,6 @@
+{
+  "name": "TradingView Financial & Crypto Dashboard",
+  "description": "Professional real-time financial and crypto terminal tracking Gold, Silver, BTC, ETH, SOL, XRP, and Bitcoin Dominance with embedded TradingView charts, timeframe controls, and historical statistics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
