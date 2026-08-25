@@ -10,7 +10,7 @@ export function useLiveMarketPrices() {
       let change = 0;
       let changePercent = 0;
       if (asset.id === 'gold') { change = 18.20; changePercent = 0.63; }
-      else if (asset.id === 'silver') { change = 0.48; changePercent = 1.48; }
+      else if (asset.id === 'silver') { change = 0.95; changePercent = 1.40; }
       else if (asset.id === 'bitcoin') { change = 1420.50; changePercent = 1.65; }
       else if (asset.id === 'ethereum') { change = -32.80; changePercent = -1.14; }
       else if (asset.id === 'solana') { change = 6.40; changePercent = 3.72; }
@@ -35,7 +35,8 @@ export function useLiveMarketPrices() {
   });
 
   const [isConnected, setIsConnected] = useState<boolean>(true);
-  const wsRef = useRef<WebSocket | null>(null);
+  const spotWsRef = useRef<WebSocket | null>(null);
+  const futuresWsRef = useRef<WebSocket | null>(null);
 
   // Update a single asset price
   const updatePrice = useCallback((
@@ -47,11 +48,11 @@ export function useLiveMarketPrices() {
     low?: number,
     volume?: number
   ) => {
-    // Sanity check: Ensure gold and silver prices are not corrupted or halved
-    if (assetId === 'gold' && (newPrice < 1500 || isNaN(newPrice))) {
+    // Sanity check: Ensure gold and silver prices are within authentic market ranges
+    if (assetId === 'gold' && (newPrice < 1500 || newPrice > 5000 || isNaN(newPrice))) {
       return;
     }
-    if (assetId === 'silver' && (newPrice < 15 || newPrice > 150 || isNaN(newPrice))) {
+    if (assetId === 'silver' && (newPrice < 20 || newPrice > 250 || isNaN(newPrice))) {
       return;
     }
 
@@ -79,45 +80,68 @@ export function useLiveMarketPrices() {
     });
   }, []);
 
-  // Fetch initial REST prices for all assets (including PAXG Spot Gold)
+  // Fetch initial REST prices for all assets (including PAXG Spot Gold and XAGUSDT Silver)
   useEffect(() => {
     let isMounted = true;
 
     const fetchRestPrices = async () => {
+      // 1. Fetch Spot Crypto & PAXG (Gold)
       try {
-        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","PAXGUSDT"]');
-        if (!res.ok) return;
-        const data = await res.json();
+        const spotRes = await fetch(
+          'https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","PAXGUSDT"]'
+        );
+        if (spotRes.ok) {
+          const spotData = await spotRes.json();
+          if (Array.isArray(spotData) && isMounted) {
+            spotData.forEach((item: any) => {
+              const s = item.symbol;
+              let assetId = '';
+              if (s === 'PAXGUSDT') assetId = 'gold';
+              else if (s === 'BTCUSDT') assetId = 'bitcoin';
+              else if (s === 'ETHUSDT') assetId = 'ethereum';
+              else if (s === 'SOLUSDT') assetId = 'solana';
+              else if (s === 'XRPUSDT') assetId = 'ripple';
 
-        if (Array.isArray(data) && isMounted) {
-          data.forEach((item: any) => {
-            const s = item.symbol;
-            let assetId = '';
-            if (s === 'PAXGUSDT') assetId = 'gold';
-            else if (s === 'BTCUSDT') assetId = 'bitcoin';
-            else if (s === 'ETHUSDT') assetId = 'ethereum';
-            else if (s === 'SOLUSDT') assetId = 'solana';
-            else if (s === 'XRPUSDT') assetId = 'ripple';
+              if (assetId && item.lastPrice) {
+                const currentPrice = parseFloat(item.lastPrice);
+                const priceChange = parseFloat(item.priceChange);
+                const priceChangePercent = parseFloat(item.priceChangePercent);
+                const highPrice = parseFloat(item.highPrice);
+                const lowPrice = parseFloat(item.lowPrice);
+                const volume = parseFloat(item.quoteVolume || '0');
 
-            if (assetId && item.lastPrice) {
-              const currentPrice = parseFloat(item.lastPrice);
-              const priceChange = parseFloat(item.priceChange);
-              const priceChangePercent = parseFloat(item.priceChangePercent);
-              const highPrice = parseFloat(item.highPrice);
-              const lowPrice = parseFloat(item.lowPrice);
-              const volume = parseFloat(item.quoteVolume || '0');
-
-              updatePrice(assetId, currentPrice, priceChange, priceChangePercent, highPrice, lowPrice, volume);
-            }
-          });
+                updatePrice(assetId, currentPrice, priceChange, priceChangePercent, highPrice, lowPrice, volume);
+              }
+            });
+          }
         }
       } catch (e) {
-        console.warn('Initial REST price fetch skipped, using live defaults/WebSocket', e);
+        console.warn('Spot ticker REST fetch error', e);
+      }
+
+      // 2. Fetch Silver (XAGUSDT) from Binance Futures ticker
+      try {
+        const silverRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=XAGUSDT');
+        if (silverRes.ok) {
+          const silverItem = await silverRes.json();
+          if (silverItem && silverItem.lastPrice && isMounted) {
+            const currentPrice = parseFloat(silverItem.lastPrice);
+            const priceChange = parseFloat(silverItem.priceChange);
+            const priceChangePercent = parseFloat(silverItem.priceChangePercent);
+            const highPrice = parseFloat(silverItem.highPrice);
+            const lowPrice = parseFloat(silverItem.lowPrice);
+            const volume = parseFloat(silverItem.quoteVolume || '0');
+
+            updatePrice('silver', currentPrice, priceChange, priceChangePercent, highPrice, lowPrice, volume);
+          }
+        }
+      } catch (e) {
+        console.warn('Silver XAGUSDT REST fetch error', e);
       }
     };
 
     fetchRestPrices();
-    const restInterval = setInterval(fetchRestPrices, 15000);
+    const restInterval = setInterval(fetchRestPrices, 12000);
 
     return () => {
       isMounted = false;
@@ -125,15 +149,16 @@ export function useLiveMarketPrices() {
     };
   }, [updatePrice]);
 
-  // Connect to Binance WebSocket for live crypto & physical gold (PAXG) feeds
+  // Connect to Binance WebSockets for live Spot (BTC, ETH, SOL, XRP, Gold) & Futures (Silver XAGUSDT)
   useEffect(() => {
     let active = true;
 
-    const connectWebSocket = () => {
+    // A. Connect Spot WebSocket (Crypto + PAXG Gold)
+    const connectSpotWebSocket = () => {
       try {
         const streamNames = 'btcusdt@ticker/ethusdt@ticker/solusdt@ticker/xrpusdt@ticker/paxgusdt@ticker';
         const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${streamNames}`);
-        wsRef.current = ws;
+        spotWsRef.current = ws;
 
         ws.onopen = () => {
           if (active) setIsConnected(true);
@@ -161,49 +186,64 @@ export function useLiveMarketPrices() {
               updatePrice(assetId, currentPrice, priceChange, priceChangePercent, highPrice, lowPrice);
             }
           } catch (err) {
-            console.error('Error parsing live price ticker', err);
+            console.error('Error parsing live spot price ticker', err);
           }
         };
 
         ws.onerror = () => {
-          setIsConnected(false);
+          // Fallback handled by REST polling
         };
 
         ws.onclose = () => {
-          setIsConnected(false);
-          // Try reconnecting after delay
           if (active) {
-            setTimeout(connectWebSocket, 4000);
+            setTimeout(connectSpotWebSocket, 4000);
           }
         };
       } catch (e) {
-        console.warn('WebSocket connection error, running in synthetic mode', e);
+        console.warn('Spot WebSocket error', e);
       }
     };
 
-    connectWebSocket();
+    // B. Connect Futures WebSocket (Silver XAGUSDT)
+    const connectFuturesWebSocket = () => {
+      try {
+        const ws = new WebSocket('wss://fstream.binance.com/ws/xagusdt@ticker');
+        futuresWsRef.current = ws;
 
-    // Subtle micro-ticks for Silver and Bitcoin Dominance and fallback
+        ws.onmessage = (event) => {
+          if (!active) return;
+          try {
+            const data = JSON.parse(event.data);
+            if (data.s === 'XAGUSDT' && data.c) {
+              const currentPrice = parseFloat(data.c);
+              const priceChange = parseFloat(data.p);
+              const priceChangePercent = parseFloat(data.P);
+              const highPrice = parseFloat(data.h);
+              const lowPrice = parseFloat(data.l);
+
+              updatePrice('silver', currentPrice, priceChange, priceChangePercent, highPrice, lowPrice);
+            }
+          } catch (err) {
+            console.error('Error parsing live silver futures ticker', err);
+          }
+        };
+
+        ws.onclose = () => {
+          if (active) {
+            setTimeout(connectFuturesWebSocket, 4000);
+          }
+        };
+      } catch (e) {
+        console.warn('Silver Futures WebSocket error', e);
+      }
+    };
+
+    connectSpotWebSocket();
+    connectFuturesWebSocket();
+
+    // Subtle micro-ticks for Bitcoin Dominance and fallback live feel
     const interval = setInterval(() => {
       if (!active) return;
-
-      // Silver tick (± 0.005 to 0.015)
-      const silverDelta = (Math.random() - 0.49) * 0.012;
-      setPrices((prev) => {
-        const silver = prev['silver'];
-        if (!silver) return prev;
-        const newSilverPrice = Number((silver.price + silverDelta).toFixed(2));
-        const dir = newSilverPrice >= silver.price ? 'up' : 'down';
-        return {
-          ...prev,
-          silver: {
-            ...silver,
-            price: newSilverPrice,
-            direction: dir,
-            lastUpdated: Date.now(),
-          },
-        };
-      });
 
       // BTCD tick (± 0.01 to 0.03%)
       const btcdDelta = (Math.random() - 0.48) * 0.015;
@@ -227,12 +267,14 @@ export function useLiveMarketPrices() {
     return () => {
       active = false;
       clearInterval(interval);
-      if (wsRef.current) {
-        wsRef.current.close();
+      if (spotWsRef.current) {
+        spotWsRef.current.close();
+      }
+      if (futuresWsRef.current) {
+        futuresWsRef.current.close();
       }
     };
   }, [updatePrice]);
 
   return { prices, isConnected };
 }
-

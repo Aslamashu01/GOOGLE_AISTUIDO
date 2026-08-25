@@ -76,7 +76,7 @@ export function calculateAssetStatistics(
   let allTimeHigh = yearHigh * 1.08;
   if (asset.id === 'bitcoin') allTimeHigh = 108900;
   if (asset.id === 'gold') allTimeHigh = 2950.00;
-  if (asset.id === 'silver') allTimeHigh = 49.80;
+  if (asset.id === 'silver') allTimeHigh = 78.50;
   if (asset.id === 'ethereum') allTimeHigh = 4891.70;
   if (asset.id === 'solana') allTimeHigh = 260.06;
   if (asset.id === 'ripple') allTimeHigh = 3.84;
@@ -85,7 +85,7 @@ export function calculateAssetStatistics(
   // Market Cap / Notional scale
   let marketCapOrNotional = '$1.72 Trillion';
   if (asset.id === 'gold') marketCapOrNotional = '$18.4 Trillion (Physical Est.)';
-  if (asset.id === 'silver') marketCapOrNotional = '$1.82 Trillion (Physical Est.)';
+  if (asset.id === 'silver') marketCapOrNotional = '$2.18 Trillion (Physical Est.)';
   if (asset.id === 'ethereum') marketCapOrNotional = '$341.5 Billion';
   if (asset.id === 'solana') marketCapOrNotional = '$84.2 Billion';
   if (asset.id === 'ripple') marketCapOrNotional = '$136.0 Billion';

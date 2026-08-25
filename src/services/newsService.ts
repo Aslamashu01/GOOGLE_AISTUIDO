@@ -28,7 +28,7 @@ export const ARCHIVED_NEWS: NewsItem[] = [
   },
   {
     id: 'silver-1',
-    title: 'Silver Spot Approaches $32.80/oz on Booming Solar Photovoltaic Manufacturing & Physical Supply Deficit',
+    title: 'Silver Spot Surges Toward $70/oz on Booming Solar Photovoltaic Manufacturing & Physical Supply Deficit',
     summary: 'Industrial silver demand reaches record seasonal heights as clean energy solar panel gigafactories consume over 190M ounces annually, narrowing spot inventories on international metal exchanges.',
     source: 'Kitco Precious Metals',
     publishedAt: '2026-08-25T07:20:00Z',

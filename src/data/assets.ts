@@ -27,7 +27,7 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     decimals: 2,
     iconColor: '#94A3B8',
     description: 'Silver spot price against the US Dollar in Troy Ounces. Dual industrial and monetary precious metal.',
-    basePrice: 32.85,
+    basePrice: 68.90,
   },
   {
     id: 'bitcoin',
