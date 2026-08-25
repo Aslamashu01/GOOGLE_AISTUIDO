@@ -69,23 +69,69 @@ export function calculateAssetStatistics(
   const sma50 = p * (1 - (change24hPercent * 0.007));
   const sma200 = p * (1 - (change24hPercent * 0.015));
 
-  // 52-Week & All-Time Highs
-  const yearHigh = highLast3Months * 1.15;
-  const yearLow = lowLast3Months * 0.78;
-  
-  let allTimeHigh = yearHigh * 1.08;
-  if (asset.id === 'bitcoin') allTimeHigh = 108900;
-  if (asset.id === 'gold') allTimeHigh = 2950.00;
-  if (asset.id === 'silver') allTimeHigh = 78.50;
-  if (asset.id === 'ethereum') allTimeHigh = 4891.70;
-  if (asset.id === 'solana') allTimeHigh = 260.06;
-  if (asset.id === 'ripple') allTimeHigh = 3.84;
-  if (asset.id === 'btcd') allTimeHigh = 73.50;
+  // 52-Week & All-Time Highs (Comparing all historical years till date)
+  let baseAth = asset.allTimeHigh || 100;
+  let athDate = asset.athDate || '2026';
+
+  if (asset.id === 'gold') {
+    baseAth = 5608.35;
+    athDate = 'Jan 29, 2026';
+  } else if (asset.id === 'silver') {
+    baseAth = 121.67;
+    athDate = 'Jan 29, 2026';
+  } else if (asset.id === 'bitcoin') {
+    baseAth = 126210.50;
+    athDate = 'Oct 6, 2025';
+  } else if (asset.id === 'ethereum') {
+    baseAth = 4953.73;
+    athDate = 'Aug 25, 2025';
+  } else if (asset.id === 'solana') {
+    baseAth = 295.00;
+    athDate = 'Jan 19, 2025';
+  } else if (asset.id === 'ripple') {
+    baseAth = 3.8400;
+    athDate = 'Jan 4, 2018';
+  } else if (asset.id === 'btcd') {
+    baseAth = 73.50;
+    athDate = 'Dec 2020';
+  }
+
+  // All-Time High is guaranteed to never be lower than the live current price
+  const allTimeHigh = Math.max(baseAth, p);
+  const athDrawdownPercent = allTimeHigh > 0 ? ((p - allTimeHigh) / allTimeHigh) * 100 : 0;
+
+  // Realistic 52-week (1 Year) High & Low
+  let yearHigh = Math.min(allTimeHigh, Math.max(p, highLast3Months * 1.08));
+  let yearLow = Math.min(p * 0.95, lowLast3Months * 0.88);
+
+  if (asset.id === 'gold') {
+    yearHigh = Math.min(allTimeHigh, Math.max(p, 5608.35));
+    yearLow = Math.min(p * 0.85, 2480.00);
+  } else if (asset.id === 'silver') {
+    yearHigh = Math.min(allTimeHigh, Math.max(p, 121.67));
+    yearLow = Math.min(p * 0.85, 28.50);
+  } else if (asset.id === 'bitcoin') {
+    yearHigh = Math.min(allTimeHigh, Math.max(p, 126210.50));
+    yearLow = Math.min(p * 0.85, 56500.00);
+  } else if (asset.id === 'ethereum') {
+    yearHigh = Math.min(allTimeHigh, Math.max(p, 4953.73));
+    yearLow = Math.min(p * 0.85, 2150.00);
+  } else if (asset.id === 'solana') {
+    yearHigh = Math.min(allTimeHigh, Math.max(p, 295.00));
+    yearLow = Math.min(p * 0.85, 115.00);
+  } else if (asset.id === 'ripple') {
+    yearHigh = Math.min(allTimeHigh, Math.max(p, 3.4000));
+    yearLow = Math.min(p * 0.85, 0.4850);
+  } else if (asset.id === 'btcd') {
+    yearHigh = Math.min(allTimeHigh, Math.max(p, 61.40));
+    yearLow = Math.min(p * 0.85, 51.20);
+  }
 
   // Market Cap / Notional scale
   let marketCapOrNotional = '$1.72 Trillion';
   if (asset.id === 'gold') marketCapOrNotional = '$18.4 Trillion (Physical Est.)';
   if (asset.id === 'silver') marketCapOrNotional = '$2.18 Trillion (Physical Est.)';
+  if (asset.id === 'bitcoin') marketCapOrNotional = '$1.72 Trillion';
   if (asset.id === 'ethereum') marketCapOrNotional = '$341.5 Billion';
   if (asset.id === 'solana') marketCapOrNotional = '$84.2 Billion';
   if (asset.id === 'ripple') marketCapOrNotional = '$136.0 Billion';
@@ -118,6 +164,8 @@ export function calculateAssetStatistics(
     yearHigh,
     yearLow,
     allTimeHigh,
+    allTimeHighDate: athDate,
+    athDrawdownPercent,
     marketCapOrNotional,
     dominancePercent: asset.id === 'btcd' ? p : undefined,
   };

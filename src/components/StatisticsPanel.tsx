@@ -252,17 +252,39 @@ RSI (14): ${stats.rsi14}
 
             {/* General Overview Key-Values */}
             <div className="bg-[#131722] rounded border border-[#2a2e39] divide-y divide-[#2a2e39] text-xs">
-              <div className="p-2.5 flex justify-between">
-                <span className="text-[#b2b5be]">All-Time High (ATH)</span>
-                <span className="font-mono font-bold text-white">
-                  {formatPrice(stats.allTimeHigh, asset.decimals, asset.unit, currency)}
-                </span>
+              <div id="stat-ath-row" className="p-2.5 flex justify-between items-center">
+                <div>
+                  <span className="text-[#b2b5be] block font-medium">All-Time High (ATH)</span>
+                  {stats.allTimeHighDate && (
+                    <span className="text-[10px] text-[#94a3b8] font-mono block mt-0.5">
+                      Last ATH Date: <strong className="text-[#e2e8f0] font-normal">{stats.allTimeHighDate}</strong>
+                    </span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className="font-mono font-bold text-white block">
+                    {formatPrice(stats.allTimeHigh, asset.decimals, asset.unit, currency)}
+                  </span>
+                  {stats.athDrawdownPercent !== undefined && (
+                    <span
+                      className={`text-[10px] font-mono font-semibold ${
+                        stats.athDrawdownPercent >= -0.5
+                          ? 'text-[#089981]'
+                          : stats.athDrawdownPercent >= -15
+                          ? 'text-[#eab308]'
+                          : 'text-[#f23645]'
+                      }`}
+                    >
+                      {stats.athDrawdownPercent >= 0 ? 'At ATH Peak' : `${stats.athDrawdownPercent.toFixed(2)}% from ATH`}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="p-2.5 flex justify-between">
+              <div className="p-2.5 flex justify-between items-center">
                 <span className="text-[#b2b5be]">Market Cap / Notional</span>
                 <span className="font-mono font-bold text-white">{stats.marketCapOrNotional}</span>
               </div>
-              <div className="p-2.5 flex justify-between">
+              <div className="p-2.5 flex justify-between items-center">
                 <span className="text-[#b2b5be]">30D Realized Volatility</span>
                 <span className="font-mono font-bold text-white">{stats.volatility30d}%</span>
               </div>

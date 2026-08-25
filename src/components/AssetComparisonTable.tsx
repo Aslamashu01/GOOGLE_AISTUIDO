@@ -41,6 +41,7 @@ export const AssetComparisonTable: React.FC<AssetComparisonTableProps> = ({
               <th className="py-3 px-3 font-semibold text-[#089981]">High MTD</th>
               <th className="py-3 px-3 font-semibold text-[#089981]">High Last Mo</th>
               <th className="py-3 px-3 font-semibold text-[#089981]">High 3 Mos</th>
+              <th className="py-3 px-3 font-semibold text-[#EAB308]">All-Time High</th>
               <th className="py-3 px-3 font-semibold">RSI (14)</th>
               <th className="py-3 px-4 font-semibold text-right font-sans">Action</th>
             </tr>
@@ -119,6 +120,18 @@ export const AssetComparisonTable: React.FC<AssetComparisonTableProps> = ({
                   {/* High 3 Mos */}
                   <td className="py-3.5 px-3 text-[#D1D4DC]">
                     {formatPrice(stats.highLast3Months, asset.decimals, asset.unit, currency)}
+                  </td>
+
+                  {/* All-Time High (ATH) */}
+                  <td className="py-3.5 px-3 font-semibold text-[#EAB308]">
+                    <div className="flex flex-col">
+                      <span className="font-bold">{formatPrice(stats.allTimeHigh, asset.decimals, asset.unit, currency)}</span>
+                      {stats.allTimeHighDate && (
+                        <span className="text-[10px] text-[#94A3B8] font-mono font-normal mt-0.5">
+                          {stats.allTimeHighDate}
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* RSI */}

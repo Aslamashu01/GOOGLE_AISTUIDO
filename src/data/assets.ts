@@ -14,6 +14,8 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     iconColor: '#F59E0B',
     description: 'Gold spot price against the US Dollar in Troy Ounces. Global safe-haven store of value.',
     basePrice: 2894.50,
+    allTimeHigh: 5608.35,
+    athDate: 'Jan 29, 2026',
   },
   {
     id: 'silver',
@@ -28,6 +30,8 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     iconColor: '#94A3B8',
     description: 'Silver spot price against the US Dollar in Troy Ounces. Dual industrial and monetary precious metal.',
     basePrice: 68.90,
+    allTimeHigh: 121.67,
+    athDate: 'Jan 29, 2026',
   },
   {
     id: 'bitcoin',
@@ -42,6 +46,8 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     iconColor: '#F7931A',
     description: 'Decentralized digital currency, the benchmark crypto asset and digital gold.',
     basePrice: 87420.00,
+    allTimeHigh: 126210.50,
+    athDate: 'Oct 6, 2025',
   },
   {
     id: 'ethereum',
@@ -56,6 +62,8 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     iconColor: '#627EEA',
     description: 'Leading smart contract and decentralized application computation platform.',
     basePrice: 2840.50,
+    allTimeHigh: 4953.73,
+    athDate: 'Aug 25, 2025',
   },
   {
     id: 'solana',
@@ -70,6 +78,8 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     iconColor: '#14F195',
     description: 'High-throughput Layer 1 blockchain optimized for fast, low-cost decentralized finance & consumer apps.',
     basePrice: 178.60,
+    allTimeHigh: 295.00,
+    athDate: 'Jan 19, 2025',
   },
   {
     id: 'ripple',
@@ -84,6 +94,8 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     iconColor: '#23292F',
     description: 'Digital asset built for global real-time cross-border settlements and enterprise liquidity.',
     basePrice: 2.3840,
+    allTimeHigh: 3.8400,
+    athDate: 'Jan 4, 2018',
   },
   {
     id: 'btcd',
@@ -98,6 +110,8 @@ export const TRACKED_ASSETS: AssetConfig[] = [
     iconColor: '#EAB308',
     description: 'Percentage of total cryptocurrency market capitalization represented by Bitcoin.',
     basePrice: 58.42,
+    allTimeHigh: 73.50,
+    athDate: 'Dec 2020',
   },
 ];
 

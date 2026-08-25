@@ -146,14 +146,26 @@ export const AssetSelector: React.FC<AssetSelectorProps> = ({
                 </span>
               </div>
 
-              {/* Price & Unit */}
+              {/* Price & Unit & ATH info */}
               <div className="my-1">
                 <span className="text-base sm:text-lg font-bold text-white font-mono tracking-tight block">
                   {formatPrice(currentPrice, asset.decimals, asset.unit, currency)}
                 </span>
-                <span className="text-[10px] text-[#787b86] font-mono block">
-                  {asset.name}
-                </span>
+                <div className="flex justify-between items-start text-[10px] text-[#787b86] font-mono mt-0.5">
+                  <span className="truncate max-w-[90px]">{asset.name}</span>
+                  {asset.allTimeHigh && (
+                    <div className="text-right shrink-0">
+                      <span className="text-[#eab308] font-semibold block">
+                        ATH {formatPrice(asset.allTimeHigh, asset.decimals, asset.unit, currency)}
+                      </span>
+                      {asset.athDate && (
+                        <span className="text-[9px] text-[#94a3b8] block">
+                          {asset.athDate}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Dynamic Mini Bento Sparkline Histogram */}

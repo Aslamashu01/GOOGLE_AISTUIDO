@@ -16,6 +16,8 @@ export interface AssetConfig {
   iconColor: string;
   description: string;
   basePrice: number;
+  allTimeHigh?: number;
+  athDate?: string;
 }
 
 export interface LivePriceData {
@@ -63,6 +65,8 @@ export interface AssetStatistics {
   yearHigh: number;
   yearLow: number;
   allTimeHigh: number;
+  allTimeHighDate?: string;
+  athDrawdownPercent?: number;
   marketCapOrNotional?: string;
   dominancePercent?: number;
 }

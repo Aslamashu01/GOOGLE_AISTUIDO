@@ -54,14 +54,24 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
                     {asset.name} ({asset.symbol})
                   </span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-mono font-bold text-xs sm:text-sm text-[#F8FAFC]">
-                    {formatPrice(price, asset.decimals, asset.unit, currency)}
-                  </span>
-                  <span className={`text-[11px] font-mono flex items-center ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
-                    {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    {isUp ? '+' : ''}{change.toFixed(2)}%
-                  </span>
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-mono font-bold text-xs sm:text-sm text-[#F8FAFC]">
+                        {formatPrice(price, asset.decimals, asset.unit, currency)}
+                      </span>
+                      <span className={`text-[11px] font-mono flex items-center ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
+                        {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        {isUp ? '+' : ''}{change.toFixed(2)}%
+                      </span>
+                    </div>
+                    {asset.allTimeHigh && (
+                      <div className="text-[10px] font-mono text-[#EAB308] flex items-center justify-end gap-1.5 mt-0.5">
+                        <span>ATH {formatPrice(asset.allTimeHigh, asset.decimals, asset.unit, currency)}</span>
+                        {asset.athDate && <span className="text-[#94A3B8]">({asset.athDate})</span>}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex-1 w-full h-full min-h-[440px]">
@@ -97,12 +107,21 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
                   <span className="text-[#787B86] text-[11px] hidden sm:inline">{asset.name}</span>
                 </div>
                 <div className="flex items-center space-x-2 font-mono">
-                  <span className="font-bold text-[#F8FAFC]">
-                    {formatPrice(price, asset.decimals, asset.unit, currency)}
-                  </span>
-                  <span className={`text-[10px] ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
-                    {isUp ? '+' : ''}{change.toFixed(1)}%
-                  </span>
+                  <div className="text-right">
+                    <div className="flex items-center space-x-1.5">
+                      <span className="font-bold text-[#F8FAFC]">
+                        {formatPrice(price, asset.decimals, asset.unit, currency)}
+                      </span>
+                      <span className={`text-[10px] ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
+                        {isUp ? '+' : ''}{change.toFixed(1)}%
+                      </span>
+                    </div>
+                    {asset.allTimeHigh && (
+                      <span className="text-[9px] text-[#EAB308] block">
+                        ATH {formatPrice(asset.allTimeHigh, asset.decimals, asset.unit, currency)} {asset.athDate ? `• ${asset.athDate}` : ''}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex-1 w-full h-full min-h-[360px]">
