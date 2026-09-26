@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NewsItem } from '../types/news';
 import { fetchLiveNews, formatNewsDate } from '../services/newsService';
 import {
@@ -9,15 +9,13 @@ import {
   Play,
   ExternalLink,
   Calendar,
-  Layers,
-  Sparkles,
   X,
-  Clock,
   Radio,
-  SlidersHorizontal,
   FileText,
+  RefreshCw,
+  Clock,
+  Sparkles,
   TrendingUp,
-  Volume2,
 } from 'lucide-react';
 
 interface LiveNewsTickerProps {
@@ -32,28 +30,33 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
   const [showAllNewsModal, setShowAllNewsModal] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'banner' | 'ticker'>('banner');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<number>(Date.now());
 
-  // Load news on mount and refresh every 90 seconds
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadNews = async () => {
+  const loadNews = useCallback(async (isManual = false) => {
+    if (isManual) setIsRefreshing(true);
+    try {
       const items = await fetchLiveNews();
-      if (isMounted) {
+      if (items && items.length > 0) {
         setNews(items);
-        setIsLoading(false);
+        setLastRefreshedAt(Date.now());
       }
-    };
-
-    loadNews();
-    const interval = setInterval(loadNews, 90000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    } catch (e) {
+      console.warn('Failed to refresh news feed', e);
+    } finally {
+      setIsLoading(false);
+      if (isManual) {
+        setTimeout(() => setIsRefreshing(false), 500);
+      }
+    }
   }, []);
+
+  // Initial load and periodic refresh every 60 seconds
+  useEffect(() => {
+    loadNews();
+    const interval = setInterval(() => loadNews(false), 60000);
+    return () => clearInterval(interval);
+  }, [loadNews]);
 
   // Filtered news list based on category filter
   const displayedNews = React.useMemo(() => {
@@ -67,16 +70,16 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
     return news.filter((n) => n.category === filterCategory);
   }, [news, filterCategory]);
 
-  // Auto rotate news item every 8 seconds if in banner mode and not paused
+  // Auto rotate news item every 8 seconds if not paused
   useEffect(() => {
-    if (isPaused || displayedNews.length <= 1 || viewMode !== 'banner') return;
+    if (isPaused || displayedNews.length <= 1) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % displayedNews.length);
     }, 8000);
 
     return () => clearInterval(timer);
-  }, [isPaused, displayedNews.length, viewMode]);
+  }, [isPaused, displayedNews.length]);
 
   const currentItem = displayedNews[currentIndex] || displayedNews[0];
 
@@ -118,8 +121,8 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
     return (
       <div className="bg-[#181B24] border-b border-[#2A2E39] px-4 py-2 text-xs text-[#787B86] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#EAB308] animate-pulse" />
-          <span>Synchronizing live financial headlines & commodities news archive...</span>
+          <span className="w-2 h-2 rounded-full bg-[#089981] animate-ping" />
+          <span>Connecting to live real-time financial wires & crypto headlines...</span>
         </div>
       </div>
     );
@@ -139,11 +142,11 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
           <div className="flex items-start md:items-center gap-2.5 flex-1 min-w-0">
             {/* Live Flashing News Badge */}
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#F23645]/15 border border-[#F23645]/40 text-[#F23645] font-black tracking-wider text-[11px] uppercase shrink-0 shadow-xs"
-              title="Real-time breaking market headlines"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#089981]/15 border border-[#089981]/40 text-[#089981] font-black tracking-wider text-[11px] uppercase shrink-0 shadow-xs"
+              title="Real-time live news feeds connected"
             >
-              <Radio className="w-3.5 h-3.5 text-[#F23645] animate-pulse" />
-              <span className="font-mono">LIVE FLASH</span>
+              <Radio className="w-3.5 h-3.5 text-[#089981] animate-pulse" />
+              <span className="font-mono">LIVE FEED</span>
             </div>
 
             {/* Asset / Category Tag */}
@@ -161,21 +164,21 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
               className="cursor-pointer group flex-1"
               title="Click to view full story and market analysis"
             >
-              <h2 className="text-xs sm:text-sm font-semibold text-[#F1F5F9] group-hover:text-[#2962FF] transition-colors leading-relaxed break-normal">
-                {currentItem.title}
-                <ExternalLink className="w-3 h-3 text-[#787B86] group-hover:text-[#2962FF] inline ml-1.5 align-middle" />
+              <h2 className="text-xs sm:text-sm font-semibold text-[#F1F5F9] group-hover:text-[#2962FF] transition-colors leading-relaxed break-normal flex items-center gap-1.5">
+                <span>{currentItem.title}</span>
+                <ExternalLink className="w-3 h-3 text-[#787B86] group-hover:text-[#2962FF] shrink-0" />
               </h2>
             </div>
           </div>
 
           {/* Right section: Exact Date & Time + Source + Action Controls */}
           <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 text-xs text-[#787B86] shrink-0 font-mono pt-1 md:pt-0 border-t md:border-t-0 border-[#2A2E39]/40">
-            {/* Full Date & Timestamp */}
+            {/* Full Date & Timestamp (Live / Relative) */}
             <div
               className="flex items-center gap-1.5 text-[#94A3B8] bg-[#10131B] px-2.5 py-1 rounded border border-[#2A2E39]"
-              title="Published Date and Time"
+              title={`Published: ${new Date(currentItem.publishedAt || currentItem.timestamp).toLocaleString()}`}
             >
-              <Calendar className="w-3.5 h-3.5 text-[#60A5FA]" />
+              <Clock className="w-3.5 h-3.5 text-[#089981]" />
               <span className="text-[11px] font-medium text-[#D1D4DC]">
                 {formatNewsDate(currentItem.publishedAt || currentItem.timestamp)}
               </span>
@@ -193,6 +196,17 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
             <span className="text-[11px] text-[#787B86] bg-[#1E222D] px-2 py-1 rounded border border-[#2A2E39]">
               {currentIndex + 1}/{displayedNews.length}
             </span>
+
+            {/* Manual Live Refresh Button */}
+            <button
+              id="btn-news-refresh"
+              onClick={() => loadNews(true)}
+              disabled={isRefreshing}
+              className="p-1 hover:bg-[#2A2E39] hover:text-white rounded border border-[#2A2E39] text-[#787B86] transition-colors"
+              title="Refresh Live Headlines Now"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#2962FF]' : ''}`} />
+            </button>
 
             {/* Navigation Slider Controls */}
             <div className="flex items-center gap-0.5 bg-[#10131B] p-0.5 rounded border border-[#2A2E39]">
@@ -227,7 +241,7 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
               id="btn-view-all-news"
               onClick={() => setShowAllNewsModal(true)}
               className="px-2.5 py-1 bg-[#2962FF]/15 hover:bg-[#2962FF]/30 border border-[#2962FF]/40 text-[#60A5FA] hover:text-white rounded text-[11px] font-sans font-semibold transition-colors flex items-center gap-1 shadow-xs"
-              title="Open Complete Market News Archive & Headlines Matrix"
+              title="Open Complete Live Market News Matrix"
             >
               <FileText className="w-3 h-3" />
               <span>All News</span>
@@ -254,7 +268,7 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
                   {selectedStory.assetSymbol || selectedStory.category}
                 </span>
                 <span className="text-xs text-[#94A3B8] flex items-center gap-1 font-mono bg-[#131722] px-2 py-0.5 rounded border border-[#2A2E39]">
-                  <Calendar className="w-3.5 h-3.5 text-[#60A5FA]" />
+                  <Clock className="w-3.5 h-3.5 text-[#089981]" />
                   {formatNewsDate(selectedStory.publishedAt || selectedStory.timestamp)}
                 </span>
               </div>
@@ -330,17 +344,33 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
               <div className="flex items-center gap-2.5">
                 <Flame className="w-5 h-5 text-[#F23645]" />
                 <div>
-                  <h2 className="text-base font-bold text-white">Live & Historical Market News Matrix</h2>
-                  <p className="text-xs text-[#787B86]">Real-time live feeds and dated historical market archives</p>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-white">Live Real-Time Market News Terminal</h2>
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-[#089981]/20 text-[#089981] border border-[#089981]/40">
+                      LIVE
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#787B86]">Streaming verified headlines for Gold, Silver, BTC, ETH, SOL, XRP & Macro</p>
                 </div>
               </div>
-              <button
-                id="btn-close-all-news"
-                onClick={() => setShowAllNewsModal(false)}
-                className="p-1.5 rounded bg-[#131722] hover:bg-[#2A2E39] text-[#787B86] hover:text-white border border-[#2A2E39] transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => loadNews(true)}
+                  disabled={isRefreshing}
+                  className="px-2.5 py-1.5 rounded bg-[#131722] hover:bg-[#2A2E39] text-[#60A5FA] hover:text-white border border-[#2A2E39] transition-colors flex items-center gap-1.5 text-xs font-mono"
+                  title="Refresh All Feeds Now"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span>Refresh</span>
+                </button>
+                <button
+                  id="btn-close-all-news"
+                  onClick={() => setShowAllNewsModal(false)}
+                  className="p-1.5 rounded bg-[#131722] hover:bg-[#2A2E39] text-[#787B86] hover:text-white border border-[#2A2E39] transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Category Filter Pills */}
@@ -381,7 +411,7 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
                     </div>
                     {/* Timestamp & Date */}
                     <span className="text-[11px] font-mono text-[#94A3B8] bg-[#10131B] px-2.5 py-0.5 rounded border border-[#2A2E39] flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-[#60A5FA]" />
+                      <Clock className="w-3 h-3 text-[#089981]" />
                       {formatNewsDate(item.publishedAt || item.timestamp)}
                     </span>
                   </div>
@@ -399,7 +429,7 @@ export const LiveNewsTicker: React.FC<LiveNewsTickerProps> = ({ onSelectAssetCat
 
             {/* Footer */}
             <div className="p-3 bg-[#161922] border-t border-[#2A2E39] flex items-center justify-between text-xs text-[#787B86]">
-              <span>Showing {displayedNews.length} verified market stories</span>
+              <span>Showing {displayedNews.length} verified live market stories</span>
               <button
                 onClick={() => setShowAllNewsModal(false)}
                 className="px-3.5 py-1.5 bg-[#131722] hover:bg-[#2A2E39] border border-[#2A2E39] text-[#D1D4DC] rounded text-xs transition-colors"
